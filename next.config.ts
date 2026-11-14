@@ -69,6 +69,7 @@ const APP_LOCALE = ["en", "pt", "es", "ko"].includes(process.env.NEXT_PUBLIC_APP
 
 const nextConfig: NextConfig = {
   turbopack: {
+    root: __dirname,
     resolveAlias: {
       "@app-messages": `./messages/${APP_LOCALE}.json`,
     },
