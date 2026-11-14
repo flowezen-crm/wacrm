@@ -1,13 +1,12 @@
+
+import 'server-only'
 import crypto from 'node:crypto'
 
 /**
  * Verify Meta's HMAC-SHA256 signature on the exact raw webhook request body.
  *
- * META_APP_SECRET is read only on the server at request time. Never expose it
- * through a NEXT_PUBLIC_ variable or import this module into client components.
- *
- * Multiple app secrets may be configured as a comma-separated environment
- * variable. A signature is accepted if it matches any configured secret.
+ * Server-only module. Never expose META_APP_SECRET through NEXT_PUBLIC_.
+ * Multiple app secrets can be configured using comma-separated values.
  */
 
 export function parseAppSecrets(raw: string | undefined): string[] {
@@ -40,7 +39,8 @@ export function verifyMetaWebhookSignature(
   rawBody: string,
   signatureHeader: string | null,
 ): boolean {
-  const secrets = parseAppSecrets(process.env.META_APP_SECRET)
+  // Read secret at runtime, not through direct dot notation.
+  const secrets = parseAppSecrets(process.env['META_APP_SECRET'])
 
   if (secrets.length === 0) {
     console.error(
@@ -49,15 +49,13 @@ export function verifyMetaWebhookSignature(
     return false
   }
 
-  // Meta sends: sha256=<64-character hexadecimal HMAC>.
   if (
     !signatureHeader ||
-    !/^sha256=[0-9a-f]{64}$/.test(signatureHeader)
+    !/^sha256=[0-9a-f]{64}$/i.test(signatureHeader)
   ) {
     return false
   }
 
-  // Check every configured secret rather than returning on the first match.
   let matched = false
 
   for (const secret of secrets) {
